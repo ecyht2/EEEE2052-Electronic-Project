@@ -73,6 +73,7 @@ int main(void)
   char uart_buf[50];
   int uart_buf_len;
   int comp_val = 0;
+  int flag = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
