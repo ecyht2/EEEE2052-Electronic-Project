@@ -17,18 +17,19 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "LCD_Display.h"
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <FFT.h>
+#include <stdint.h>
+#include "LCD_Display.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+#define ADC_BUF_LEN 4096
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -41,19 +42,35 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
+
 COMP_HandleTypeDef hcomp1;
+
+TIM_HandleTypeDef htim16;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+// ADC Globals
+float speed_ms;
+float signal_level;
+int flag = 0;
 
+// Comparator Globals
+uint64_t ticks = 0;
+uint64_t clock_cycles = 0;
+unsigned char comp_val;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_COMP1_Init(void);
+static void MX_ADC1_Init(void);
+static void MX_TIM16_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -70,10 +87,25 @@ static void MX_COMP1_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  // Comparator variables
+  float comp_freq;
+  comp_val = HAL_COMP_GetOutputLevel(&hcomp1);
+  // Uart variables
   char uart_buf[50];
   int uart_buf_len;
-  int comp_val = 0;
-  int flag = 0;
+
+  // ADC variables
+  struct ADC_param ADC_val = {0};
+  struct FFT_res FFT_val = {0};
+
+  // Setting up ADC_Val
+  ADC_val.bit = 12;
+  ADC_val.prescaler = 64;
+  ADC_val.sampling_time = 47.5;
+  ADC_val.speed = 80000000;			//clock speed on .ioc file
+  ADC_val.adc_buf_len = ADC_BUF_LEN;		//buffer length
+  uint32_t adc_buf[ADC_val.adc_buf_len];	//buffer array
+  ADC_val.adc_buf = adc_buf;			//store the value of buffer array pointer
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -94,22 +126,41 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_COMP1_Init();
+  MX_ADC1_Init();
+  MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
+  // Starting Processes
   HAL_COMP_Start(&hcomp1);
   LCD_init();
+  // HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+  HAL_TIM_Base_Start_IT(&htim16);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	comp_val = HAL_COMP_GetOutputLevel(&hcomp1);
-	uart_buf_len = sprintf(uart_buf, "%d volt",comp_val);
-	LCD_put_cur(0, 0);
-	LCD_send_string(uart_buf);
-	HAL_UART_Transmit(&huart2, (uint8_t *) uart_buf, uart_buf_len, 100);
+      comp_freq = (float) ticks / (float) (clock_cycles * 0.0001953125);
+      uart_buf_len = sprintf(uart_buf, "COMP f: %lf", comp_freq);
+      LCD_put_cur(0, 0);
+      LCD_send_string(uart_buf);
+      uart_buf_len = sprintf(uart_buf, "COMP f: %lu", clock_cycles);
+      LCD_put_cur(1, 0);
+      LCD_send_string(uart_buf);
+
+      // ADC while
+      if (0){
+	  HAL_ADC_Stop_DMA(&hadc1);
+	  start_FFT(&flag, &ADC_val, &FFT_val);
+	  uart_buf_len = sprintf(uart_buf, "ADC f: %lf", FFT_val.fdominant);
+	  LCD_put_cur(1, 0);
+	  LCD_send_string(uart_buf);
+	  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+	  /* HAL_UART_Transmit(&huart2, (unsigned char *) uart_buf, uart_buf_len, 100); */
+      }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -167,6 +218,73 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_MultiModeTypeDef multimode = {0};
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Common config
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.LowPowerAutoWait = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
+  hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc1.Init.OversamplingMode = DISABLE;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure the ADC multi-mode
+  */
+  multimode.Mode = ADC_MODE_INDEPENDENT;
+  if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
   * @brief COMP1 Initialization Function
   * @param None
   * @retval None
@@ -197,6 +315,38 @@ static void MX_COMP1_Init(void)
   /* USER CODE BEGIN COMP1_Init 2 */
 
   /* USER CODE END COMP1_Init 2 */
+
+}
+
+/**
+  * @brief TIM16 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM16_Init(void)
+{
+
+  /* USER CODE BEGIN TIM16_Init 0 */
+
+  /* USER CODE END TIM16_Init 0 */
+
+  /* USER CODE BEGIN TIM16_Init 1 */
+
+  /* USER CODE END TIM16_Init 1 */
+  htim16.Instance = TIM16;
+  htim16.Init.Prescaler = 15625;
+  htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim16.Init.Period = 1;
+  htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim16.Init.RepetitionCounter = 0;
+  htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim16) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM16_Init 2 */
+
+  /* USER CODE END TIM16_Init 2 */
 
 }
 
@@ -232,6 +382,22 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
 
@@ -289,7 +455,30 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+// Called when first half of buffer is filled
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+}
 
+// Called when buffer is completely filled
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  flag = 1;
+}
+
+// Callback: timer has rolled over
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+  // Checking for the right clock
+  if (htim != &htim16) {
+      return;
+  }
+  uint8_t ccomp_val = HAL_COMP_GetOutputLevel(&hcomp1);
+  if (ccomp_val != comp_val) {
+      ticks++;
+      comp_val = ccomp_val;
+  }
+  clock_cycles++;
+}
 /* USER CODE END 4 */
 
 /**
