@@ -147,7 +147,7 @@ int main(void)
       uart_buf_len = sprintf(uart_buf, "COMP f: %lf", comp_freq);
       LCD_put_cur(0, 0);
       LCD_send_string(uart_buf);
-      uart_buf_len = sprintf(uart_buf, "COMP f: %lu", clock_cycles);
+      uart_buf_len = sprintf(uart_buf, "COMP f: %d", comp_val);
       LCD_put_cur(1, 0);
       LCD_send_string(uart_buf);
 
