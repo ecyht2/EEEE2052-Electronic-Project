@@ -48,6 +48,7 @@ DMA_HandleTypeDef hdma_adc1;
 COMP_HandleTypeDef hcomp1;
 
 TIM_HandleTypeDef htim16;
+TIM_HandleTypeDef htim17;
 
 UART_HandleTypeDef huart2;
 
@@ -71,6 +72,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_COMP1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM16_Init(void);
+static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -131,24 +133,23 @@ int main(void)
   MX_COMP1_Init();
   MX_ADC1_Init();
   MX_TIM16_Init();
+  MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
   // Starting Processes
   HAL_COMP_Start(&hcomp1);
   LCD_init();
   // HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   HAL_TIM_Base_Start_IT(&htim16);
+  HAL_TIM_Base_Start_IT(&htim17);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      comp_freq = (float) ticks / (float) (clock_cycles * 0.0001953125);
+      comp_freq = (float) ticks / (float) (clock_cycles * 0.0001953125) / 2;
       uart_buf_len = sprintf(uart_buf, "COMP f: %lf", comp_freq);
       LCD_put_cur(0, 0);
-      LCD_send_string(uart_buf);
-      uart_buf_len = sprintf(uart_buf, "COMP f: %d", comp_val);
-      LCD_put_cur(1, 0);
       LCD_send_string(uart_buf);
 
       // ADC while
@@ -351,6 +352,38 @@ static void MX_TIM16_Init(void)
 }
 
 /**
+  * @brief TIM17 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM17_Init(void)
+{
+
+  /* USER CODE BEGIN TIM17_Init 0 */
+
+  /* USER CODE END TIM17_Init 0 */
+
+  /* USER CODE BEGIN TIM17_Init 1 */
+
+  /* USER CODE END TIM17_Init 1 */
+  htim17.Instance = TIM17;
+  htim17.Init.Prescaler = 40000-1;
+  htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim17.Init.Period = 2000-1;
+  htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim17.Init.RepetitionCounter = 0;
+  htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim17) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM17_Init 2 */
+
+  /* USER CODE END TIM17_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -469,15 +502,17 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 // Callback: timer has rolled over
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   // Checking for the right clock
-  if (htim != &htim16) {
-      return;
+  if (htim == &htim16) { // Comparator clock
+      uint8_t ccomp_val = HAL_COMP_GetOutputLevel(&hcomp1);
+      if (ccomp_val != comp_val) {
+	  ticks++;
+	  comp_val = ccomp_val;
+      }
+      clock_cycles++;
+  } else if(htim == &htim17) { // Reset clock
+      ticks = 0;
+      comp_val = 0;
   }
-  uint8_t ccomp_val = HAL_COMP_GetOutputLevel(&hcomp1);
-  if (ccomp_val != comp_val) {
-      ticks++;
-      comp_val = ccomp_val;
-  }
-  clock_cycles++;
 }
 /* USER CODE END 4 */
 
