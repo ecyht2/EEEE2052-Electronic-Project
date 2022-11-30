@@ -17,7 +17,7 @@ void LCD_send_cmd (char cmd);
 void LCD_init();
 void LCD_put_cur(int row, int col);
 void LCD_send_string(char*);
-uint32_t LCD_button(ADC_HandleTypeDef *);
+void LCD_button(ADC_HandleTypeDef *);
 void LCD_print_float(float x);
 void serial_print(char*, UART_HandleTypeDef*);
 
