@@ -25,6 +25,7 @@
 #include <FFT.h>
 #include <stdint.h>
 #include "LCD_Display.h"
+#include "ADC.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,11 +89,11 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   // Comparator variables
-  float comp_freq;
+  //float comp_freq;
   comp_val = HAL_COMP_GetOutputLevel(&hcomp1);
   // Uart variables
-  char uart_buf[50];
-  int uart_buf_len;
+  //char uart_buf[50];
+  //int uart_buf_len;
 
   // ADC variables
   struct ADC_param ADC_val = {0};
@@ -143,24 +144,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//      comp_freq = (float) ticks / (float) (clock_cycles * 0.0001953125);
-//      uart_buf_len = sprintf(uart_buf, "COMP f: %lf", comp_freq);
-//      LCD_put_cur(0, 0);
-//      LCD_send_string(uart_buf);
-//      uart_buf_len = sprintf(uart_buf, "COMP f: %d", comp_val);
-//      LCD_put_cur(1, 0);
-//      LCD_send_string(uart_buf);
-
-      // ADC while
-      if (flag == 1){
-		  //HAL_ADC_Stop_DMA(&hadc1);
-		  start_FFT(&flag, &ADC_val, &FFT_val);
-		  uart_buf_len = sprintf(uart_buf, "ADC f: %lf", FFT_val.fdominant);
-		  LCD_put_cur(1, 0);
-		  LCD_send_string(uart_buf);
-		  //HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
-	  /* HAL_UART_Transmit(&huart2, (unsigned char *) uart_buf, uart_buf_len, 100); */
-      }
+	ADC(&flag, &ADC_val, &FFT_val);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -307,7 +291,7 @@ static void MX_COMP1_Init(void)
   hcomp1.Init.BlankingSrce = COMP_BLANKINGSRC_NONE;
   hcomp1.Init.Mode = COMP_POWERMODE_HIGHSPEED;
   hcomp1.Init.WindowMode = COMP_WINDOWMODE_DISABLE;
-  hcomp1.Init.TriggerMode = COMP_TRIGGERMODE_NONE;
+  hcomp1.Init.TriggerMode = COMP_TRIGGERMODE_EVENT_RISING;
   if (HAL_COMP_Init(&hcomp1) != HAL_OK)
   {
     Error_Handler();
