@@ -25,11 +25,13 @@
 #include <FFT.h>
 #include <stdint.h>
 #include "LCD_Display.h"
+#include "comparator.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 #define ADC_BUF_LEN 4096
+#define CLOCK_PERIOD 6.25e-5
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -48,7 +50,6 @@ DMA_HandleTypeDef hdma_adc1;
 COMP_HandleTypeDef hcomp1;
 
 TIM_HandleTypeDef htim16;
-TIM_HandleTypeDef htim17;
 
 UART_HandleTypeDef huart2;
 
@@ -60,8 +61,8 @@ int flag = 0;
 
 // Comparator Globals
 uint64_t ticks = 0;
-uint64_t clock_cycles = 0;
-unsigned char comp_val;
+uint64_t clock_ticks = 0;
+uint8_t comp_val;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -72,7 +73,6 @@ static void MX_USART2_UART_Init(void);
 static void MX_COMP1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM16_Init(void);
-static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -133,24 +133,22 @@ int main(void)
   MX_COMP1_Init();
   MX_ADC1_Init();
   MX_TIM16_Init();
-  MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
   // Starting Processes
   HAL_COMP_Start(&hcomp1);
   LCD_init();
   // HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   HAL_TIM_Base_Start_IT(&htim16);
-  // HAL_TIM_Base_Start_IT(&htim17);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      comp_freq = (float) ticks / (float) (clock_cycles * 6.25e-5) / 2;
+      comp_freq = calculateFrequency(ticks, clock_ticks, CLOCK_PERIOD);
       uart_buf_len = sprintf(uart_buf, "COMP f: %lf", comp_freq);
-//      HAL_UART_Transmit(&huart2, (unsigned char *) uart_buf, uart_buf_len, 100);
-//      HAL_UART_Transmit(&huart2, (unsigned char *) "\r\n", 2, 100);
+      // HAL_UART_Transmit(&huart2, (unsigned char *) uart_buf, uart_buf_len, 100);
+      /// HAL_UART_Transmit(&huart2, (unsigned char *) "\r\n", 2, 100);
       LCD_put_cur(0, 0);
       LCD_send_string(uart_buf);
 
@@ -354,38 +352,6 @@ static void MX_TIM16_Init(void)
 }
 
 /**
-  * @brief TIM17 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM17_Init(void)
-{
-
-  /* USER CODE BEGIN TIM17_Init 0 */
-
-  /* USER CODE END TIM17_Init 0 */
-
-  /* USER CODE BEGIN TIM17_Init 1 */
-
-  /* USER CODE END TIM17_Init 1 */
-  htim17.Instance = TIM17;
-  htim17.Init.Prescaler = 1;
-  htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim17.Init.Period = 65535;
-  htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim17.Init.RepetitionCounter = 0;
-  htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim17) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM17_Init 2 */
-
-  /* USER CODE END TIM17_Init 2 */
-
-}
-
-/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -505,21 +471,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   // Checking for the right clock
   if (htim == &htim16) { // Comparator clock
-      // Resetting values
-      if (clock_cycles > 65535) {
-	  ticks = 0;
-	  clock_cycles = 0;
-      }
-
-      // Increasing values
-      uint8_t ccomp_val = HAL_COMP_GetOutputLevel(&hcomp1);
-      if (ccomp_val != comp_val) {
-	  ticks++;
-	  comp_val = ccomp_val;
-      }
-      clock_cycles++;
-  } else if (htim == &htim17) {
-      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
+      handleClockCallback(&hcomp1, &comp_val, &ticks, &clock_ticks);
   }
 }
 /* USER CODE END 4 */
