@@ -4,11 +4,9 @@
  *  Created on: Nov 7, 2022
  *      Author: User
  */
-#include "LCD_Display.h"
 #include "main.h"
 #include <stdio.h>
-#include <string.h>
-#include "stm32l4xx_hal.h"
+#include "LCD_Display.h"
 
 #define D4_PORT GPIOB
 #define D4_PIN GPIO_PIN_5
@@ -22,8 +20,8 @@
 #define RS_PIN GPIO_PIN_9
 #define EN_PORT GPIOC
 #define EN_PIN GPIO_PIN_7
-
-
+#define A0_PORT GPIOA
+#define A0_PIN GPIO_PIN_0
 
 void send_to_lcd (char data, int rs){
     HAL_GPIO_WritePin(RS_PORT, RS_PIN, rs);  // rs = 1 for data, rs=0 for command
@@ -55,6 +53,7 @@ void LCD_send_data (char data){
 
 void LCD_send_cmd (char cmd){
     char datatosend;
+
     /* send upper nibble first */
     datatosend = ((cmd>>4)&0x0f);
     send_to_lcd(datatosend,0);  // RS must be while sending command
@@ -100,8 +99,8 @@ void LCD_put_cur(int row, int col){
 
 void LCD_send_string(char *str){
 	while (*str) {
-		LCD_send_data(*str++);
-	}
+			LCD_send_data(*str++);
+		}
 }
 
 void LCD_clear(){
@@ -109,6 +108,30 @@ void LCD_clear(){
 	HAL_Delay(2);
 }
 
+void LCD_button(ADC_HandleTypeDef *hadc1){
+	HAL_ADC_Start(hadc1);
+	HAL_ADC_PollForConversion(hadc1,100);
+	uint32_t button_key = HAL_ADC_GetValue(hadc1);
 
+		if(button_key>1740 && button_key<1760){
+			LCD_put_cur(0, 0);
+			LCD_send_string("Hello World ");
+		}
+		else if (button_key>740 && button_key<750){
+			LCD_put_cur(0, 0);
+			LCD_send_string("Your mom gay");
+		}
+}
 
+void LCD_print_float(float x){
+	char uart_buf[50];
+	sprintf(uart_buf, "%f        ", x);
+	LCD_send_string(uart_buf);
+}
 
+void serial_print(char *str, UART_HandleTypeDef* huart2){
+	char uart_buf[50];
+	int uart_buf_len;
+	uart_buf_len = sprintf(uart_buf, str);
+	HAL_UART_Transmit(huart2, (unsigned char *) uart_buf, uart_buf_len, 100);
+}
