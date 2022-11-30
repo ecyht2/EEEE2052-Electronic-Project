@@ -100,9 +100,9 @@ int main(void)
 
   // Setting up ADC_Val
   ADC_val.bit = 12;
-  ADC_val.prescaler = 64;
-  ADC_val.sampling_time = 47.5;
-  ADC_val.speed = 80000000;			//clock speed on .ioc file
+  ADC_val.prescaler = 128;
+  ADC_val.sampling_time = 12.5;
+  ADC_val.speed = 64000000;			//clock speed on .ioc file
   ADC_val.adc_buf_len = ADC_BUF_LEN;		//buffer length
   uint32_t adc_buf[ADC_val.adc_buf_len];	//buffer array
   ADC_val.adc_buf = adc_buf;			//store the value of buffer array pointer
@@ -135,7 +135,7 @@ int main(void)
   // Starting Processes
   HAL_COMP_Start(&hcomp1);
   LCD_init();
-  // HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   HAL_TIM_Base_Start_IT(&htim16);
   /* USER CODE END 2 */
 
@@ -143,22 +143,22 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      comp_freq = (float) ticks / (float) (clock_cycles * 0.0001953125);
-      uart_buf_len = sprintf(uart_buf, "COMP f: %lf", comp_freq);
-      LCD_put_cur(0, 0);
-      LCD_send_string(uart_buf);
-      uart_buf_len = sprintf(uart_buf, "COMP f: %d", comp_val);
-      LCD_put_cur(1, 0);
-      LCD_send_string(uart_buf);
+//      comp_freq = (float) ticks / (float) (clock_cycles * 0.0001953125);
+//      uart_buf_len = sprintf(uart_buf, "COMP f: %lf", comp_freq);
+//      LCD_put_cur(0, 0);
+//      LCD_send_string(uart_buf);
+//      uart_buf_len = sprintf(uart_buf, "COMP f: %d", comp_val);
+//      LCD_put_cur(1, 0);
+//      LCD_send_string(uart_buf);
 
       // ADC while
-      if (0){
-	  HAL_ADC_Stop_DMA(&hadc1);
-	  start_FFT(&flag, &ADC_val, &FFT_val);
-	  uart_buf_len = sprintf(uart_buf, "ADC f: %lf", FFT_val.fdominant);
-	  LCD_put_cur(1, 0);
-	  LCD_send_string(uart_buf);
-	  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+      if (flag == 1){
+		  //HAL_ADC_Stop_DMA(&hadc1);
+		  start_FFT(&flag, &ADC_val, &FFT_val);
+		  uart_buf_len = sprintf(uart_buf, "ADC f: %lf", FFT_val.fdominant);
+		  LCD_put_cur(1, 0);
+		  LCD_send_string(uart_buf);
+		  //HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
 	  /* HAL_UART_Transmit(&huart2, (unsigned char *) uart_buf, uart_buf_len, 100); */
       }
     /* USER CODE END WHILE */
@@ -239,7 +239,7 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV64;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
@@ -270,7 +270,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_12CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
