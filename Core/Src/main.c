@@ -144,7 +144,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  LCD_button();
+	  LCD_button(&hadc1);
 	  ADC(&flag, &ADC_val, &FFT_val);
     /* USER CODE END WHILE */
 
