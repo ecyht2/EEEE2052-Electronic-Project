@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include "LCD_Display.h"
 #include "comparator.h"
+#include "ADC.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,7 +46,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
-DMA_HandleTypeDef hdma_adc1;
 
 COMP_HandleTypeDef hcomp1;
 
@@ -68,7 +68,6 @@ uint8_t comp_val;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_COMP1_Init(void);
 static void MX_ADC1_Init(void);
@@ -90,11 +89,11 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   // Comparator variables
-  float comp_freq;
+  //float comp_freq;
   comp_val = HAL_COMP_GetOutputLevel(&hcomp1);
   // Uart variables
-  char uart_buf[50];
-  int uart_buf_len;
+  //char uart_buf[50];
+  //int uart_buf_len;
 
   // ADC variables
   struct ADC_param ADC_val = {0};
@@ -102,9 +101,9 @@ int main(void)
 
   // Setting up ADC_Val
   ADC_val.bit = 12;
-  ADC_val.prescaler = 64;
-  ADC_val.sampling_time = 47.5;
-  ADC_val.speed = 80000000;			//clock speed on .ioc file
+  ADC_val.prescaler = 128;
+  ADC_val.sampling_time = 12.5;
+  ADC_val.speed = 64000000;			//clock speed on .ioc file
   ADC_val.adc_buf_len = ADC_BUF_LEN;		//buffer length
   uint32_t adc_buf[ADC_val.adc_buf_len];	//buffer array
   ADC_val.adc_buf = adc_buf;			//store the value of buffer array pointer
@@ -128,16 +127,18 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_COMP1_Init();
   MX_ADC1_Init();
   MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
   // Starting Processes
-  HAL_COMP_Start(&hcomp1);
   LCD_init();
-  // HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
+  LCD_clear();
+
+  HAL_COMP_Start(&hcomp1);
+
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
   HAL_TIM_Base_Start_IT(&htim16);
   /* USER CODE END 2 */
 
@@ -145,23 +146,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      comp_freq = calculateFrequency(ticks, clock_ticks, CLOCK_PERIOD);
-      uart_buf_len = sprintf(uart_buf, "COMP f: %lf", comp_freq);
-      // HAL_UART_Transmit(&huart2, (unsigned char *) uart_buf, uart_buf_len, 100);
-      /// HAL_UART_Transmit(&huart2, (unsigned char *) "\r\n", 2, 100);
-      LCD_put_cur(0, 0);
-      LCD_send_string(uart_buf);
-
-      // ADC while
-      if (0){
-	  HAL_ADC_Stop_DMA(&hadc1);
-	  start_FFT(&flag, &ADC_val, &FFT_val);
-	  uart_buf_len = sprintf(uart_buf, "ADC f: %lf", FFT_val.fdominant);
-	  LCD_put_cur(1, 0);
-	  LCD_send_string(uart_buf);
-	  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
-	  /* HAL_UART_Transmit(&huart2, (unsigned char *) uart_buf, uart_buf_len, 100); */
-      }
+    comp_freq = calculateFrequency(ticks, clock_ticks, CLOCK_PERIOD);
+	  ADC(&flag, &ADC_val, &FFT_val);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -246,12 +232,12 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.DMAContinuousRequests = ENABLE;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc1.Init.OversamplingMode = DISABLE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -269,7 +255,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
@@ -308,7 +294,7 @@ static void MX_COMP1_Init(void)
   hcomp1.Init.BlankingSrce = COMP_BLANKINGSRC_NONE;
   hcomp1.Init.Mode = COMP_POWERMODE_HIGHSPEED;
   hcomp1.Init.WindowMode = COMP_WINDOWMODE_DISABLE;
-  hcomp1.Init.TriggerMode = COMP_TRIGGERMODE_NONE;
+  hcomp1.Init.TriggerMode = COMP_TRIGGERMODE_EVENT_RISING;
   if (HAL_COMP_Init(&hcomp1) != HAL_OK)
   {
     Error_Handler();
@@ -383,22 +369,6 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
-
-}
-
-/**
-  * Enable DMA controller clock
-  */
-static void MX_DMA_Init(void)
-{
-
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA1_CLK_ENABLE();
-
-  /* DMA interrupt init */
-  /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
 
