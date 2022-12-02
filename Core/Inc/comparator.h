@@ -12,7 +12,21 @@
 
 #include "main.h"
 
-void handleClockCallback(COMP_HandleTypeDef *hcomp, uint8_t *comp_val, uint64_t *ticks, uint64_t *clock_ticks);
-float calculateFrequency(uint64_t ticks, uint64_t clock_ticks, float tick_period);
+typedef struct {
+  COMP_HandleTypeDef *hcomp;
+  TIM_HandleTypeDef *htim;
+  float timer_frequency;
+
+  /* PRIVATE */
+  uint8_t current_comp_val;
+  uint64_t ticks;
+  uint64_t clock_ticks;
+} Comparator;
+
+void comparatorInit(Comparator *this, COMP_HandleTypeDef *hcomp, TIM_HandleTypeDef *htim, float timer_frequency);
+void comparatorStart(Comparator *this);
+void comparatorStop(Comparator *this);
+void comparatorHandleClockCallback(Comparator *this);
+float comparatorCalculateFrequency(Comparator *this);
 
 #endif /* SRC_COMPARATOR_H_ */

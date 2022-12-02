@@ -10,7 +10,30 @@
 
 #include "main.h"
 
-void handleClockCallback(COMP_HandleTypeDef *hcomp, uint8_t *comp_val, uint64_t *ticks, uint64_t *clock_ticks) {
+void comparatorInit(Comparator *this, COMP_HandleTypeDef *hcomp, TIM_HandleTypeDef *htim, float timer_frequency) {
+  this->hcomp = hcomp;
+  this->htim = htim;
+  this->timer_frequency = timer_frequency;
+  comparatorStart(this);
+}
+
+void comparatorStart(Comparator *this) {
+  HAL_COMP_Start(this->hcomp);
+  HAL_TIM_Base_Start_IT(this->htim);
+  this->current_comp_val = HAL_COMP_GetOutputLevel(this->hcomp);
+}
+
+void comparatorStop(Comparator *this) {
+  HAL_COMP_Stop(this->hcomp);
+  HAL_TIM_Base_Stop_IT(this->htim);
+}
+
+void comparatorHandleClockCallback(Comparator *this) {
+  COMP_HandleTypeDef *hcomp = this->hcomp;
+  uint8_t *comp_val = &(this->current_comp_val);
+  uint64_t *ticks = &(this->ticks);
+  uint64_t *clock_ticks = &(this->clock_ticks);
+
   // Resetting values
   if (*clock_ticks > 65535) {
 	  *ticks = 0;
@@ -26,7 +49,7 @@ void handleClockCallback(COMP_HandleTypeDef *hcomp, uint8_t *comp_val, uint64_t 
   (*clock_ticks)++;
 }
 
-float calculateFrequency(uint64_t ticks, uint64_t clock_ticks, float tick_period) {
-  float comp_freq = (float) ticks / (float) (clock_ticks * tick_period) / 2;
+float comparatorCalculateFrequency(Comparator *this) {
+  float comp_freq = this->timer_frequency * (float) this->ticks / (float) this->clock_ticks / 2;
   return comp_freq;
 }
