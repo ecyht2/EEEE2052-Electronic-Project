@@ -55,14 +55,10 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 // ADC Globals
-float speed_ms;
-float signal_level;
-int flag = 0;
+ADC adc;
 
 // Comparator Globals
-uint64_t ticks = 0;
-uint64_t clock_ticks = 0;
-uint8_t comp_val;
+Comparator comp;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -88,25 +84,14 @@ static void MX_TIM16_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  // Comparator variables
-  float comp_freq = 0;
-  comp_val = HAL_COMP_GetOutputLevel(&hcomp1);
-  // Uart variables
-  //char uart_buf[50];
-  //int uart_buf_len;
+  // LCD Variables
+  LCDButtons mode_state = UP;
+  LCDButtons display_mode = RIGHT;
+  float current_frequency = 0;
+  float current_speed = 0;
 
   // ADC variables
-  struct ADC_param ADC_val = {0};
-  struct FFT_res FFT_val = {0};
-
-  // Setting up ADC_Val
-  ADC_val.bit = 12;
-  ADC_val.prescaler = 128;
-  ADC_val.sampling_time = 12.5;
-  ADC_val.speed = 64000000;			//clock speed on .ioc file
-  ADC_val.adc_buf_len = ADC_BUF_LEN;		//buffer length
-  uint32_t adc_buf[ADC_val.adc_buf_len];	//buffer array
-  ADC_val.adc_buf = adc_buf;			//store the value of buffer array pointer
+  uint32_t adc_buf[ADC_BUF_LEN];	//buffer array
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -133,21 +118,64 @@ int main(void)
   MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
   // Starting Processes
+  // Initializing LCD
   LCD_init();
   LCD_clear();
 
-  HAL_COMP_Start(&hcomp1);
+  // Initializing LCD Buttons
+  HAL_ADC_Start(&hadc1);
+  HAL_ADC_PollForConversion(&hadc1, 100);
 
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buf, ADC_BUF_LEN);
-  HAL_TIM_Base_Start_IT(&htim16);
+  // Initializing Comparator
+  comparatorInit(&comp, &hcomp1, &htim16, 1 / CLOCK_PERIOD);
+  comparatorStop(&comp);
+  // Initializing ADC
+  ADCInit(&adc, ADC_BUF_LEN, adc_buf, 64000000, 128, 12, 12.5);
+  ADCStop(&adc);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    comp_freq = calculateFrequency(ticks, clock_ticks, CLOCK_PERIOD);
-    ADC(&flag, &ADC_val, &FFT_val);
+    LCDButtons current_button = LCD_get_pressed_button(&hadc1);
+
+    // Setting Mode
+    if (current_button == DOWN) {
+	comparatorStart(&comp);
+	ADCStop(&adc);
+	mode_state = DOWN;
+    } else if (current_button == UP) {
+	comparatorStop(&comp);
+	ADCStart(&adc);
+	mode_state = UP;
+    } else if (current_button == RIGHT) {
+	display_mode = RIGHT;
+    } else if (current_button == LEFT) {
+	display_mode = LEFT;
+    }
+
+    // Getting Frequency
+    if (mode_state == DOWN) {
+	current_frequency = comparatorCalculateFrequency(&comp);
+    } else if(mode_state == UP) {
+	current_frequency = ADCCalculateFrequency(&adc, 1);
+    }
+
+    // Printing to LCD
+    if (display_mode == RIGHT) {
+
+    } else if (display_mode == LEFT) {
+
+    }
+
+    // Printing to LCD
+    // Line 1
+    LCD_put_cur(0, 0);
+    LCD_print_float("Frequency", current_frequency);
+    // Line 2
+    LCD_put_cur(1, 0);
+    LCD_print_float("Speed", current_speed);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -434,14 +462,14 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
 // Called when buffer is completely filled
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-  flag = 1;
+  ADCHandleCallback(&adc);
 }
 
 // Callback: timer has rolled over
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   // Checking for the right clock
   if (htim == &htim16) { // Comparator clock
-      handleClockCallback(&hcomp1, &comp_val, &ticks, &clock_ticks);
+      comparatorHandleClockCallback(&comp);
   }
 }
 /* USER CODE END 4 */
