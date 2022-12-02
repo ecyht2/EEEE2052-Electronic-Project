@@ -108,19 +108,28 @@ void LCD_clear(){
 	HAL_Delay(2);
 }
 
-void LCD_button(ADC_HandleTypeDef *hadc1){
-	HAL_ADC_Start(hadc1);
-	HAL_ADC_PollForConversion(hadc1,100);
-	uint32_t button_key = HAL_ADC_GetValue(hadc1);
+void LCD_button(ADC_HandleTypeDef *hadc){
+  LCDButtons value = LCD_get_pressed_button(hadc);
+}
 
-		if(button_key>1740 && button_key<1760){
-			LCD_put_cur(0, 0);
-			LCD_send_string("Hello World ");
-		}
-		else if (button_key>740 && button_key<750){
-			LCD_put_cur(0, 0);
-			LCD_send_string("Your mom gay");
-		}
+/**
+ * @breif Gets which button is being pressed on the LCD keypad shield.
+ * @param hadc ADC to read to get the button value.
+ * @return The button number that is being pressed.
+ * */
+LCDButtons LCD_get_pressed_button(ADC_HandleTypeDef *hadc) {
+  uint16_t button_value = HAL_ADC_GetValue(hadc);
+  if (button_value < 10) {
+      return RIGHT;
+  } else if (button_value < 760){
+      return UP;
+  } else if(button_value < 1760){
+      return DOWN;
+  } else if (button_value < 2685) {
+      return LEFT;
+  } else {
+      return SELECT;
+  }
 }
 
 void LCD_print_float(float x){
