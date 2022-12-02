@@ -10,46 +10,48 @@
 
 #include "main.h"
 
-void comparatorInit(Comparator *this, COMP_HandleTypeDef *hcomp, TIM_HandleTypeDef *htim, float timer_frequency) {
-  this->hcomp = hcomp;
-  this->htim = htim;
-  this->timer_frequency = timer_frequency;
-  comparatorStart(this);
+void comparatorInit(Comparator *this, COMP_HandleTypeDef *hcomp,
+		TIM_HandleTypeDef *htim, float timer_frequency) {
+	this->hcomp = hcomp;
+	this->htim = htim;
+	this->timer_frequency = timer_frequency;
+	comparatorStart(this);
 }
 
 void comparatorStart(Comparator *this) {
-  HAL_COMP_Start(this->hcomp);
-  HAL_TIM_Base_Start_IT(this->htim);
-  this->current_comp_val = HAL_COMP_GetOutputLevel(this->hcomp);
+	HAL_COMP_Start(this->hcomp);
+	HAL_TIM_Base_Start_IT(this->htim);
+	this->current_comp_val = HAL_COMP_GetOutputLevel(this->hcomp);
 }
 
 void comparatorStop(Comparator *this) {
-  HAL_COMP_Stop(this->hcomp);
-  HAL_TIM_Base_Stop_IT(this->htim);
+	HAL_COMP_Stop(this->hcomp);
+	HAL_TIM_Base_Stop_IT(this->htim);
 }
 
 void comparatorHandleClockCallback(Comparator *this) {
-  COMP_HandleTypeDef *hcomp = this->hcomp;
-  uint8_t *comp_val = &(this->current_comp_val);
-  uint64_t *ticks = &(this->ticks);
-  uint64_t *clock_ticks = &(this->clock_ticks);
+	COMP_HandleTypeDef *hcomp = this->hcomp;
+	uint8_t *comp_val = &(this->current_comp_val);
+	uint64_t *ticks = &(this->ticks);
+	uint64_t *clock_ticks = &(this->clock_ticks);
 
-  // Resetting values
-  if (*clock_ticks > 65535) {
-	  *ticks = 0;
-	  *clock_ticks = 0;
-  }
+	// Resetting values
+	if (*clock_ticks > 65535) {
+		*ticks = 0;
+		*clock_ticks = 0;
+	}
 
-  // Increasing values
-  uint8_t current_comp_val = HAL_COMP_GetOutputLevel(hcomp);
-  if (current_comp_val != *comp_val) {
-	  (*ticks)++;
-	  *comp_val = current_comp_val;
-  }
-  (*clock_ticks)++;
+	// Increasing values
+	uint8_t current_comp_val = HAL_COMP_GetOutputLevel(hcomp);
+	if (current_comp_val != *comp_val) {
+		(*ticks)++;
+		*comp_val = current_comp_val;
+	}
+	(*clock_ticks)++;
 }
 
 float comparatorCalculateFrequency(Comparator *this) {
-  float comp_freq = this->timer_frequency * (float) this->ticks / (float) this->clock_ticks / 2;
-  return comp_freq;
+	float comp_freq = this->timer_frequency * (float) this->ticks
+			/ (float) this->clock_ticks / 2;
+	return comp_freq;
 }

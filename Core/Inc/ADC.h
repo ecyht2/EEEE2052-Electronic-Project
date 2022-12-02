@@ -14,16 +14,17 @@
 #include "LCD_Display.h"
 
 typedef struct {
-  ADC_HandleTypeDef *hadc;
+	ADC_HandleTypeDef *hadc;
 
-  /* PRIVATE */
-  struct ADC_param ADC_val;
-  struct FFT_res FFT_val;
-  int flag;
+	/* PRIVATE */
+	struct ADC_param ADC_val;
+	struct FFT_res FFT_val;
+	int flag;
 } ADC;
 
-void ADCInit(ADC *this, const uint64_t adc_buf_len, uint32_t adc_buf[], uint32_t clock_speed,
-	     uint32_t prescaler, uint32_t bit, float sampling_time);
+void ADCInit(ADC *this, const uint64_t adc_buf_len, uint32_t adc_buf[],
+		uint32_t clock_speed, uint32_t prescaler, uint32_t bit,
+		float sampling_time);
 void ADCStart(ADC *this);
 void ADCStop(ADC *this);
 void ADCHandleCallback(ADC *this);

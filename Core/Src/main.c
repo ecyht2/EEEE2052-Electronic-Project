@@ -136,46 +136,45 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    LCDButtons current_button = LCD_get_pressed_button(&hadc1);
+  while (1) {
+	  LCDButtons current_button = LCD_get_pressed_button(&hadc1);
 
-    // Setting Mode
-    if (current_button == DOWN) {
-	comparatorStart(&comp);
-	ADCStop(&adc);
-	mode_state = DOWN;
-    } else if (current_button == UP) {
-	comparatorStop(&comp);
-	ADCStart(&adc);
-	mode_state = UP;
-    } else if (current_button == RIGHT) {
-	display_mode = RIGHT;
-    } else if (current_button == LEFT) {
-	display_mode = LEFT;
-    }
+	  // Setting Mode
+	  if (current_button == DOWN) {
+		  comparatorStart(&comp);
+		  ADCStop(&adc);
+		  mode_state = DOWN;
+	  } else if (current_button == UP) {
+		  comparatorStop(&comp);
+		  ADCStart(&adc);
+		  mode_state = UP;
+	  } else if (current_button == RIGHT) {
+		  display_mode = RIGHT;
+	  } else if (current_button == LEFT) {
+		  display_mode = LEFT;
+	  }
 
-    // Getting Frequency
-    if (mode_state == DOWN) {
-	current_frequency = comparatorCalculateFrequency(&comp);
-    } else if(mode_state == UP) {
-	current_frequency = ADCCalculateFrequency(&adc, 1);
-    }
+	  // Getting Frequency
+	  if (mode_state == DOWN) {
+		  current_frequency = comparatorCalculateFrequency(&comp);
+	  } else if(mode_state == UP) {
+		  current_frequency = ADCCalculateFrequency(&adc, 1);
+	  }
 
-    // Printing to LCD
-    if (display_mode == RIGHT) {
+	  // Printing to LCD
+	  if (display_mode == RIGHT) {
 
-    } else if (display_mode == LEFT) {
+	  } else if (display_mode == LEFT) {
 
-    }
+	  }
 
-    // Printing to LCD
-    // Line 1
-    LCD_put_cur(0, 0);
-    LCD_print_float("Frequency", current_frequency);
-    // Line 2
-    LCD_put_cur(1, 0);
-    LCD_print_float("Speed", current_speed);
+	  // Printing to LCD
+	  // Line 1
+	  LCD_put_cur(0, 0);
+	  LCD_print_float("Frequency", current_frequency);
+	  // Line 2
+	  LCD_put_cur(1, 0);
+	  LCD_print_float("Speed", current_speed);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -456,21 +455,21 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 // Called when first half of buffer is filled
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 }
 
 // Called when buffer is completely filled
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-  ADCHandleCallback(&adc);
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  	ADCHandleCallback(&adc);
 }
 
 // Callback: timer has rolled over
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-  // Checking for the right clock
-  if (htim == &htim16) { // Comparator clock
-      comparatorHandleClockCallback(&comp);
-  }
+	// Checking for the right clock
+	if (htim == &htim16) { // Comparator clock
+		comparatorHandleClockCallback(&comp);
+	}
 }
 /* USER CODE END 4 */
 
