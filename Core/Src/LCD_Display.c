@@ -109,7 +109,7 @@ void LCD_clear(){
 }
 
 void LCD_button(ADC_HandleTypeDef *hadc){
-  LCDButtons value = LCD_get_pressed_button(hadc);
+    LCDButtons value = LCD_get_pressed_button(hadc);
 }
 
 /**
@@ -118,24 +118,24 @@ void LCD_button(ADC_HandleTypeDef *hadc){
  * @return The button number that is being pressed.
  * */
 LCDButtons LCD_get_pressed_button(ADC_HandleTypeDef *hadc) {
-  uint16_t button_value = HAL_ADC_GetValue(hadc);
-  if (button_value < 10) {
-      return RIGHT;
-  } else if (button_value < 760){
-      return UP;
-  } else if(button_value < 1760){
-      return DOWN;
-  } else if (button_value < 2685) {
-      return LEFT;
-  } else {
-      return SELECT;
-  }
+    uint16_t button_value = HAL_ADC_GetValue(hadc);
+    if (button_value < 10) {
+	return RIGHT;
+    } else if (button_value < 760){
+    	return UP;
+    } else if(button_value < 1760){
+	return DOWN;
+    } else if (button_value < 2685) {
+	return LEFT;
+    } else {
+	return SELECT;
+    }
 }
 
-void LCD_print_float(float x){
-	char uart_buf[50];
-	sprintf(uart_buf, "%f        ", x);
-	LCD_send_string(uart_buf);
+void LCD_print_float(char *description, float x){\
+  char uart_buf[17];
+  sprintf(uart_buf, "%s: %f", description, x);
+  LCD_send_string(uart_buf);
 }
 
 void serial_print(char *str, UART_HandleTypeDef* huart2){
