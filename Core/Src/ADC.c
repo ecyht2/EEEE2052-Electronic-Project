@@ -12,9 +12,10 @@
 #include <stdio.h>
 #include "LCD_Display.h"
 
-void ADCInit(ADC *this, const uint64_t adc_buf_len, uint32_t adc_buf[],
-		uint32_t clock_speed, uint32_t prescaler, uint32_t bit,
-		float sampling_time) {
+void ADCInit(ADC *this, ADC_HandleTypeDef *hadc, const uint64_t adc_buf_len,
+		uint32_t adc_buf[], uint32_t clock_speed, uint32_t prescaler,
+		uint32_t bit, float sampling_time) {
+	this->hadc = hadc;
 	this->ADC_val.adc_buf_len = adc_buf_len;
 	this->ADC_val.adc_buf = adc_buf;
 	this->ADC_val.speed = clock_speed;
