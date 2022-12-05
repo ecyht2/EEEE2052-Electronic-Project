@@ -15,7 +15,6 @@ void comparatorInit(Comparator *this, COMP_HandleTypeDef *hcomp,
 	this->hcomp = hcomp;
 	this->htim = htim;
 	this->timer_frequency = timer_frequency;
-	comparatorStart(this);
 }
 
 void comparatorStart(Comparator *this) {

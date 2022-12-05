@@ -21,8 +21,6 @@ void ADCInit(ADC *this, const uint64_t adc_buf_len, uint32_t adc_buf[],
 	this->ADC_val.prescaler = prescaler;
 	this->ADC_val.bit = bit;
 	this->ADC_val.sampling_time = sampling_time;
-
-	ADCStart(this);
 }
 
 void ADCStart(ADC *this) {
