@@ -30,13 +30,13 @@ float calculateSpeedMPH(float detected, float transmitted) {
  * @param str The string to print.
  * @param huart The serial port to use.
  */
-void serial_print(UART_HandleTypeDef *huart, char *restrict format, ...) {
-	char uart_buf[50];
+void serial_print(UART_HandleTypeDef *huart, unsigned int buf_len, char *restrict format, ...) {
+	char uart_buf[buf_len];
 	int uart_buf_len;
 
 	va_list args;
 	va_start(args, format);
 
-	uart_buf_len = vsnprintf(uart_buf, 50, format, args);
+	uart_buf_len = vsnprintf(uart_buf, buf_len, format, args);
 	HAL_UART_Transmit(huart, (unsigned char*) uart_buf, uart_buf_len, 100);
 }
