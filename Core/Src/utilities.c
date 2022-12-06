@@ -24,11 +24,12 @@ float calculateSpeedMPH(float detected, float transmitted) {
 /**
  * @breif Prints the string in the serial output.
  *
- * *Note*: The maximum number of characters that can be print is 50
- * including the end of end of string character.
+ * *Note*: Please ensure a sufficient amount of buf_len is
+ * given for the string to print correct.
  *
- * @param str The string to print.
  * @param huart The serial port to use.
+ * @param buf_len The size of the buffer to print.
+ * @param format The format string.
  */
 void serial_print(UART_HandleTypeDef *huart, unsigned int buf_len, char *restrict format, ...) {
 	char uart_buf[buf_len];
