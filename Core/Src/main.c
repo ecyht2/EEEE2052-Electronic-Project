@@ -93,7 +93,9 @@ int main(void)
   /* USER CODE BEGIN 1 */
   // LCD Variables
   LCDButtons sampling_mode = UP;
+  char sampling_text[16] = "ADC f";
   LCDButtons units_mode = RIGHT;
+  char units_text[16] = "kmph";
   float current_frequency = 0;
   float current_speed = 0;
 
@@ -151,14 +153,18 @@ int main(void)
 		  comparatorStart(&comp);
 		  ADCStop(&adc);
 		  sampling_mode = DOWN;
+		  snprintf(sampling_text, 16, "COMP f");
 	  } else if (current_button == UP && sampling_mode != UP) {
 		  comparatorStop(&comp);
 		  ADCStart(&adc);
 		  sampling_mode = UP;
+		  snprintf(sampling_text, 16, "ADC f");
 	  } else if (current_button == RIGHT && units_mode != RIGHT) {
 		  units_mode = RIGHT;
+		  snprintf(units_text, 16, "kmph");
 	  } else if (current_button == LEFT && units_mode != LEFT) {
 		  units_mode = LEFT;
+		  snprintf(units_text, 16, "mph");
 	  }
 
 	  // Getting Frequency
@@ -178,10 +184,10 @@ int main(void)
 	  // Printing to LCD
 	  // Line 1
 	  LCD_put_cur(0, 0);
-	  LCD_print_float("Frequency", current_frequency);
+	  LCD_print_float(sampling_text, current_frequency);
 	  // Line 2
 	  LCD_put_cur(1, 0);
-	  LCD_print_float("Speed", current_speed);
+	  LCD_print_float(units_text, current_speed);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
