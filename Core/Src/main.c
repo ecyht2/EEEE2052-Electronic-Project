@@ -33,6 +33,7 @@
 /* USER CODE BEGIN PTD */
 #define ADC_BUF_LEN 4096
 #define CLOCK_FREQUENCY 16e3
+#define TRANSMITTED_FREQUENCY 10.525e9
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -168,9 +169,9 @@ int main(void)
 
 	  // Printing to LCD
 	  if (display_mode == RIGHT) {
-
+		  current_speed = calculateSpeed(current_frequency, TRANSMITTED_FREQUENCY);
 	  } else if (display_mode == LEFT) {
-
+		  current_speed = calculateSpeedMPH(current_frequency, TRANSMITTED_FREQUENCY);
 	  }
 
 	  // Printing to LCD
