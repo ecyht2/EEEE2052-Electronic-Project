@@ -100,7 +100,7 @@ int main(void)
   float current_speed = 0;
 
   // ADC variables
-  uint32_t adc_buf[ADC_BUF_LEN];	//buffer array
+  uint32_t adc_buf[ADC_BUF_LEN] = {0};	//buffer array
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
