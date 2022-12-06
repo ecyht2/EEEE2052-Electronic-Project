@@ -7,6 +7,7 @@
 #include "utilities.h"
 
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "stm32l4xx.h"
 
@@ -29,9 +30,13 @@ float calculateSpeedMPH(float detected, float transmitted) {
  * @param str The string to print.
  * @param huart The serial port to use.
  */
-void serial_print(char *str, UART_HandleTypeDef *huart) {
+void serial_print(UART_HandleTypeDef *huart, char *restrict format, ...) {
 	char uart_buf[50];
 	int uart_buf_len;
-	uart_buf_len = sprintf(uart_buf, str);
+
+	va_list args;
+	va_start(args, format);
+
+	uart_buf_len = vsnprintf(uart_buf, 50, format, args);
 	HAL_UART_Transmit(huart, (unsigned char*) uart_buf, uart_buf_len, 100);
 }
