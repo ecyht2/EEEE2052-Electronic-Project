@@ -27,6 +27,7 @@
 #include "LCD_Display.h"
 #include "comparator.h"
 #include "ADC.h"
+#include "utilities.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
