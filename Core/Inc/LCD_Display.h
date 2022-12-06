@@ -10,6 +10,9 @@
 #include "main.h"
 #include <inttypes.h>
 
+/**
+ * @breif Enumeration of LCD Buttons.
+ */
 typedef enum LCDButtons {
 	RIGHT, UP, DOWN, LEFT, SELECT
 } LCDButtons;

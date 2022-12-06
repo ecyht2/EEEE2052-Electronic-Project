@@ -107,36 +107,56 @@ void LCD_clear() {
 	HAL_Delay(2);
 }
 
-
 /**
  * @breif Gets which button is being pressed on the LCD keypad shield.
+ *
  * @param hadc ADC to read to get the button value.
+ *
  * @return The button number that is being pressed.
  * */
 LCDButtons LCD_get_pressed_button(ADC_HandleTypeDef *hadc) {
+	HAL_ADC_Start(hadc);
+	HAL_ADC_PollForConversion(hadc, 100);
 	uint16_t button_value = HAL_ADC_GetValue(hadc);
+
 	if (button_value < 10) {
 		return RIGHT;
-	} else if (button_value < 760) {
+	} else if (button_value < 1000) {
 		return UP;
-	} else if (button_value < 1760) {
+	} else if (button_value < 2000) {
 		return DOWN;
-	} else if (button_value < 2685) {
+	} else if (button_value < 3000) {
 		return LEFT;
 	} else {
 		return SELECT;
 	}
 }
 
+/**
+ * @breif Prints a floating point number in the form:
+ * "description: x"
+ *
+ * @param description The description of the floating point number.
+ * @param x The floating point number.
+ */
 void LCD_print_float(char *description, float x) {
 	char uart_buf[17];
 	sprintf(uart_buf, "%s: %f", description, x);
 	LCD_send_string(uart_buf);
 }
 
-void serial_print(char *str, UART_HandleTypeDef *huart2) {
+/**
+ * @breif Prints the string in the serial output.
+ *
+ * *Note*: The maximum number of characters that can be print is 50
+ * including the end of end of string character.
+ *
+ * @param str The string to print.
+ * @param huart The serial port to use.
+ */
+void serial_print(char *str, UART_HandleTypeDef *huart) {
 	char uart_buf[50];
 	int uart_buf_len;
 	uart_buf_len = sprintf(uart_buf, str);
-	HAL_UART_Transmit(huart2, (unsigned char*) uart_buf, uart_buf_len, 100);
+	HAL_UART_Transmit(huart, (unsigned char*) uart_buf, uart_buf_len, 100);
 }
