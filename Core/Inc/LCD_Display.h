@@ -26,6 +26,5 @@ void LCD_put_cur(int row, int col);
 void LCD_send_string(char*);
 LCDButtons LCD_get_pressed_button(ADC_HandleTypeDef *hadc);
 void LCD_print_float(char *description, float x);
-void serial_print(char*, UART_HandleTypeDef*);
 
 #endif /* SRC_MYHEADER_H_ */
