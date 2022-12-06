@@ -92,8 +92,10 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   // LCD Variables
-  LCDButtons mode_state = UP;
-  LCDButtons display_mode = RIGHT;
+  LCDButtons sampling_mode = UP;
+  char sampling_text[16] = "ADC f";
+  LCDButtons units_mode = RIGHT;
+  char units_text[16] = "kmph";
   float current_frequency = 0;
   float current_speed = 0;
 
@@ -147,41 +149,45 @@ int main(void)
 	  LCDButtons current_button = LCD_get_pressed_button(&hadc2);
 
 	  // Setting Mode
-	  if (current_button == DOWN && mode_state != DOWN) {
+	  if (current_button == DOWN && sampling_mode != DOWN) {
 		  comparatorStart(&comp);
 		  ADCStop(&adc);
-		  mode_state = DOWN;
-	  } else if (current_button == UP && mode_state != UP) {
+		  sampling_mode = DOWN;
+		  snprintf(sampling_text, 16, "COMP f");
+	  } else if (current_button == UP && sampling_mode != UP) {
 		  comparatorStop(&comp);
 		  ADCStart(&adc);
-		  mode_state = UP;
-	  } else if (current_button == RIGHT && display_mode != RIGHT) {
-		  display_mode = RIGHT;
-	  } else if (current_button == LEFT && display_mode != LEFT) {
-		  display_mode = LEFT;
+		  sampling_mode = UP;
+		  snprintf(sampling_text, 16, "ADC f");
+	  } else if (current_button == RIGHT && units_mode != RIGHT) {
+		  units_mode = RIGHT;
+		  snprintf(units_text, 16, "kmph");
+	  } else if (current_button == LEFT && units_mode != LEFT) {
+		  units_mode = LEFT;
+		  snprintf(units_text, 16, "mph");
 	  }
 
 	  // Getting Frequency
-	  if (mode_state == DOWN) {
+	  if (sampling_mode == DOWN) {
 		  current_frequency = comparatorCalculateFrequency(&comp);
-	  } else if(mode_state == UP) {
+	  } else if(sampling_mode == UP) {
 		  current_frequency = ADCCalculateFrequency(&adc, 1);
 	  }
 
 	  // Printing to LCD
-	  if (display_mode == RIGHT) {
+	  if (units_mode == RIGHT) {
 		  current_speed = calculateSpeed(current_frequency, TRANSMITTED_FREQUENCY);
-	  } else if (display_mode == LEFT) {
+	  } else if (units_mode == LEFT) {
 		  current_speed = calculateSpeedMPH(current_frequency, TRANSMITTED_FREQUENCY);
 	  }
 
 	  // Printing to LCD
 	  // Line 1
 	  LCD_put_cur(0, 0);
-	  LCD_print_float("Frequency", current_frequency);
+	  LCD_print_float(sampling_text, current_frequency);
 	  // Line 2
 	  LCD_put_cur(1, 0);
-	  LCD_print_float("Speed", current_speed);
+	  LCD_print_float(units_text, current_speed);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
