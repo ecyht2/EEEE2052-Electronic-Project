@@ -92,8 +92,8 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   // LCD Variables
-  LCDButtons mode_state = UP;
-  LCDButtons display_mode = RIGHT;
+  LCDButtons sampling_mode = UP;
+  LCDButtons units_mode = RIGHT;
   float current_frequency = 0;
   float current_speed = 0;
 
@@ -147,31 +147,31 @@ int main(void)
 	  LCDButtons current_button = LCD_get_pressed_button(&hadc2);
 
 	  // Setting Mode
-	  if (current_button == DOWN && mode_state != DOWN) {
+	  if (current_button == DOWN && sampling_mode != DOWN) {
 		  comparatorStart(&comp);
 		  ADCStop(&adc);
-		  mode_state = DOWN;
-	  } else if (current_button == UP && mode_state != UP) {
+		  sampling_mode = DOWN;
+	  } else if (current_button == UP && sampling_mode != UP) {
 		  comparatorStop(&comp);
 		  ADCStart(&adc);
-		  mode_state = UP;
-	  } else if (current_button == RIGHT && display_mode != RIGHT) {
-		  display_mode = RIGHT;
-	  } else if (current_button == LEFT && display_mode != LEFT) {
-		  display_mode = LEFT;
+		  sampling_mode = UP;
+	  } else if (current_button == RIGHT && units_mode != RIGHT) {
+		  units_mode = RIGHT;
+	  } else if (current_button == LEFT && units_mode != LEFT) {
+		  units_mode = LEFT;
 	  }
 
 	  // Getting Frequency
-	  if (mode_state == DOWN) {
+	  if (sampling_mode == DOWN) {
 		  current_frequency = comparatorCalculateFrequency(&comp);
-	  } else if(mode_state == UP) {
+	  } else if(sampling_mode == UP) {
 		  current_frequency = ADCCalculateFrequency(&adc, 1);
 	  }
 
 	  // Printing to LCD
-	  if (display_mode == RIGHT) {
+	  if (units_mode == RIGHT) {
 		  current_speed = calculateSpeed(current_frequency, TRANSMITTED_FREQUENCY);
-	  } else if (display_mode == LEFT) {
+	  } else if (units_mode == LEFT) {
 		  current_speed = calculateSpeedMPH(current_frequency, TRANSMITTED_FREQUENCY);
 	  }
 
