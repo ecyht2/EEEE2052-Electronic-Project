@@ -188,6 +188,7 @@ int main(void)
 	  // Line 2
 	  LCD_put_cur(1, 0);
 	  LCD_print_float(units_text, current_speed);
+	  HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
