@@ -410,7 +410,7 @@ static void MX_COMP1_Init(void)
 
   /* USER CODE END COMP1_Init 1 */
   hcomp1.Instance = COMP1;
-  hcomp1.Init.InvertingInput = COMP_INPUT_MINUS_1_2VREFINT;
+  hcomp1.Init.InvertingInput = COMP_INPUT_MINUS_3_4VREFINT;
   hcomp1.Init.NonInvertingInput = COMP_INPUT_PLUS_IO2;
   hcomp1.Init.OutputPol = COMP_OUTPUTPOL_NONINVERTED;
   hcomp1.Init.Hysteresis = COMP_HYSTERESIS_NONE;
