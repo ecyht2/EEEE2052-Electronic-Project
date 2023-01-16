@@ -41,7 +41,9 @@ void comparatorHandleClockCallback(Comparator *this) {
 	}
 
 	// Increasing values
+	// Reading comparator
 	uint8_t current_comp_val = HAL_COMP_GetOutputLevel(hcomp);
+	// Checking if the value changed
 	if (current_comp_val != *comp_val) {
 		(*ticks)++;
 		*comp_val = current_comp_val;
