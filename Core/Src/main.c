@@ -574,13 +574,15 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
 // Called when buffer is completely filled
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-	ADCHandleCallback(&adc);
+	if (hadc == adc.hadc) {
+		ADCHandleCallback(&adc);
+	}
 }
 
 // Callback: timer has rolled over
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	// Checking for the right clock
-	if (htim == &htim16) { // Comparator clock
+	if (htim == comp.htim) { // Comparator clock
 		comparatorHandleClockCallback(&comp);
 	}
 }
