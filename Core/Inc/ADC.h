@@ -2,7 +2,8 @@
  * ADC.h
  *
  *  Created on: 30 Nov 2022
- *      Author: zhiyu
+ *      Author: wong80
+ * 	   License: GPL-3.0-or-later
  */
 
 #ifndef SRC_ADC_H_
