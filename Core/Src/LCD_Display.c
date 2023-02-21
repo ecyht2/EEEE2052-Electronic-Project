@@ -2,7 +2,8 @@
  * LCD_Display.c
  *
  *  Created on: Nov 7, 2022
- *      Author: User
+ *      Author: LyeWenHao
+ * 	   License: GPL-3.0-or-later
  */
 #include "main.h"
 #include <stdio.h>

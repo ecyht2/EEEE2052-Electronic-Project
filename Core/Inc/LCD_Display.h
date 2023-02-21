@@ -1,8 +1,9 @@
 /*
- * myheader.h
+ * LCD_Display.h
  *
  *  Created on: Nov 7, 2022
- *      Author: User
+ *      Author: LyeWenHao
+ * 	   License: GPL-3.0-or-later
  */
 
 #ifndef SRC_MYHEADER_H_
