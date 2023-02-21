@@ -2,7 +2,8 @@
  * utilities.c
  *
  *  Created on: Dec 6, 2022
- *      Author: University
+ *      Author: ecyht2
+ * 	   License: GPL-3.0-or-later
  */
 #include "utilities.h"
 
