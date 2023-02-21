@@ -2,7 +2,8 @@
  * comparator.h
  *
  *  Created on: Nov 30, 2022
- *      Author: University
+ *      Author: ecyht2
+ * 	   License: GPL-3.0-or-later
  */
 
 #ifndef SRC_COMPARATOR_H_

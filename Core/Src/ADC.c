@@ -2,7 +2,8 @@
  * ADC.c
  *
  *  Created on: Nov 30, 2022
- *      Author: zhiyu
+ *      Author: wong80
+ * 	   License: GPL-3.0-or-later
  */
 #include "ADC.h"
 #include "main.h"
