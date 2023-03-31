@@ -67,25 +67,37 @@ uint8_t binToBCD(uint8_t number) {
       return 0;
     }
 
-    while(number > 0) {
+    // Calculating the number of bits the number has
+    uint8_t temp_number = number;
+    uint8_t n = 1;
+    int bit_max = 1;
+
+    while (temp_number > 1) {
+      temp_number = temp_number >> 1;
+      n++;
+      bit_max *= 2;
+    }
+
+    for (int i = 0; i < n; i++) {
       // Getting the MSB
-      if(number & 0x80) {
+      if(number & bit_max) {
         result++;
       }
+
       // Shifting number
       number = number << 1;
 
-      // Breaking out once it has shifted 8 times
-      if(number == 0) {
+      // Breaking if at last shift
+      if (i == (n - 1)) {
         break;
       }
 
       // Adding 3 if any of the numbers are 5 or greater
-      if((result & 0x0f) > 0x05) {
+      if((result & 0x0f) >= 0x05) {
         result += 0x03;
       }
 
-      if((result & 0xf0) > 0x50) {
+      if((result & 0xf0) >= 0x50) {
         result += 0x30;
       }
 
