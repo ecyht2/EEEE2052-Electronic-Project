@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <FFT.h>
 #include <stdint.h>
+#include <math.h>
 #include "LCD_Display.h"
 #include "comparator.h"
 #include "ADC.h"
@@ -191,6 +192,12 @@ int main(void)
 	  // Line 2
 	  LCD_put_cur(1, 0);
 	  LCD_print_float(units_text, current_speed);
+
+	  // Sending to 7-segment display
+	  uint8_t speed_u8 = (uint8_t) roundf(current_speed);
+	  uint8_t speed_bcd = binToBCD(speed_u8);
+	  HAL_UART_Transmit(&huart3, &speed_bcd, 1, 100);
+
 	  HAL_Delay(500);
     /* USER CODE END WHILE */
 
