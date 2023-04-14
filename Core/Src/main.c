@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <FFT.h>
 #include <stdint.h>
+#include <math.h>
 #include "LCD_Display.h"
 #include "comparator.h"
 #include "ADC.h"
@@ -191,6 +192,12 @@ int main(void)
 	  // Line 2
 	  LCD_put_cur(1, 0);
 	  LCD_print_float(units_text, current_speed);
+
+	  // Sending to 7-segment display
+	  uint8_t speed_u8 = (uint8_t) roundf(current_speed);
+	  uint8_t speed_bcd = binToBCD(speed_u8);
+	  HAL_UART_Transmit(&huart3, &speed_bcd, 1, 100);
+
 	  HAL_Delay(500);
     /* USER CODE END WHILE */
 
@@ -558,6 +565,8 @@ static void MX_DMA_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -601,6 +610,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
