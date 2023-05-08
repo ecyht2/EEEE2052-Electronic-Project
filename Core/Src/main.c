@@ -198,7 +198,7 @@ int main(void)
 	  uint8_t speed_bcd = binToBCD(speed_u8);
 	  HAL_UART_Transmit(&huart3, &speed_bcd, 1, 100);
 
-	  HAL_Delay(500);
+	  HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -421,7 +421,7 @@ static void MX_COMP1_Init(void)
 
   /* USER CODE END COMP1_Init 1 */
   hcomp1.Instance = COMP1;
-  hcomp1.Init.InvertingInput = COMP_INPUT_MINUS_VREFINT;
+  hcomp1.Init.InvertingInput = COMP_INPUT_MINUS_1_2VREFINT;
   hcomp1.Init.NonInvertingInput = COMP_INPUT_PLUS_IO2;
   hcomp1.Init.OutputPol = COMP_OUTPUTPOL_NONINVERTED;
   hcomp1.Init.Hysteresis = COMP_HYSTERESIS_NONE;
